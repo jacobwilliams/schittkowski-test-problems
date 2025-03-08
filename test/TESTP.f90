@@ -1,5 +1,6 @@
 PROGRAM spag_program_1
-!
+   use test_problems
+
 !*********************************************************************
 !
 !
@@ -150,10 +151,8 @@ PROGRAM spag_program_1
 !      Department of Computer Science, University of Bayreuth,
 !      2006
 !
-!
-!
 !*********************************************************************
-!
+
    IMPLICIT NONE
    INTEGER NMAX , MMAX , LMAX , MNNMAX , LWA , LIWA , LACTIV , N , Nili , Ninl , Neli , Nenl , Nex
    PARAMETER (NMAX=101,MMAX=50,LMAX=1,MNNMAX=NMAX+NMAX+MMAX+2,LWA=3*NMAX*NMAX/2+33*NMAX+10*MMAX+150,LIWA=MMAX+NMAX+150,            &
@@ -170,15 +169,17 @@ PROGRAM spag_program_1
    INTEGER notot , nofail , nosucc , nftot , ndftot , neftot , noex , noexgt , ndfequ , nobett , iout1 , iout2 , iout3 , iout4 ,   &
          & i , j , l , iprint , maxfun , maxit , mode , maxnm , ntpa , ntpe , Ntp , mnn2 , nf , ndf , ifail , me , mi , m , iwa
    COMMON /testr / Epsgrd
-   EXTERNAL ql
+
+   external :: nlpqlp, ql
    INTEGER :: spag_nextblock_1
+
    spag_nextblock_1 = 1
    SPAG_DispatchLoop_1: DO
       SELECT CASE (spag_nextblock_1)
       CASE (1)
-!
-!   Open output files
-!
+         !
+         !   Open output files
+         !
          iout1 = 61
          iout2 = 62
          iout3 = 63
@@ -187,9 +188,9 @@ PROGRAM spag_program_1
          OPEN (iout2,FILE='TEMP.DAT',STATUS='UNKNOWN')
          OPEN (iout3,FILE='RESULT.DAT',STATUS='UNKNOWN')
          OPEN (iout4,FILE='TEST.TEX',STATUS='UNKNOWN')
-!
-!   Tolerances for calling optimization routine
-!
+         !
+         !   Tolerances for calling optimization routine
+         !
          iprint = 2
          maxfun = 30
          maxit = 3000
@@ -202,9 +203,9 @@ PROGRAM spag_program_1
          accqp = 1.0D-13
          epssucc = 0.01D0
          Epsgrd = 1.0D-8
-!
-!   Initializing counters
-!
+         !
+         !   Initializing counters
+         !
          notot = 0
          nofail = 0
          nosucc = 0
@@ -214,22 +215,22 @@ PROGRAM spag_program_1
          noex = 0
          noexgt = 0
          nobett = 0
-!
-!   Initial data for executing test problems in a loop
-!
+         !
+         !   Initial data for executing test problems in a loop
+         !
          ntpa = 1
          ntpe = 395
          Ntp = ntpa
          spag_nextblock_1 = 2
       CASE (2)
-!
-!   Some test problem numbers do not exist
-!
+         !
+         !   Some test problem numbers do not exist
+         !
          IF ( .NOT.(Ntp==58 .OR. Ntp==82 .OR. Ntp==94 .OR. Ntp==115 .OR. (Ntp>119 .AND. Ntp<200) .OR. Ntp==306 .OR. Ntp==313 .OR.  &
             & Ntp==349 .OR. Ntp==363 .OR. Ntp==390) ) THEN
-!
-!   Initialize test problem
-!
+            !
+            !   Initialize test problem
+            !
             CALL conv(1)
             me = Neli + Nenl
             mi = Nili + Ninl
@@ -245,10 +246,10 @@ PROGRAM spag_program_1
             DO j = 1 , m
                Index1(j) = .TRUE.
             ENDDO
-!
-! ----------------------------------------------------------------------
-!   Beginn of optimization block (reverse communication)
-!
+            !
+            ! ----------------------------------------------------------------------
+            !   Beginn of optimization block (reverse communication)
+            !
             nf = 0
             ndf = 0
             ifail = 0
@@ -264,15 +265,16 @@ PROGRAM spag_program_1
                   ndf = ndf + 1
                   CALL nlgrad(m,me,MMAX,N,f(1),g,df,dg,x,geps)
                ENDIF
-               CALL nlpqlp(l,m,me,MMAX,N,NMAX,mnn2,x,f,g,df,dg,u,Xl,Xu,c,d,acc,accqp,stpmin,maxfun,maxit,maxnm,rhob,iprint,mode,   &
-                         & iout1,ifail,wa,LWA,iwa,LIWA,active,LACTIV,.TRUE.,ql)
+               CALL nlpqlp(l,m,me,MMAX,N,NMAX,mnn2,x,f,g,df,dg,u,Xl,Xu,c,d,acc,accqp,&
+                           stpmin,maxfun,maxit,maxnm,rhob,iprint,mode,   &
+                           iout1,ifail,wa,LWA,iwa,LIWA,active,LACTIV,.TRUE.,ql)
                IF ( ifail>=0 ) THEN
-!
-!   End of optimization block
-! ----------------------------------------------------------------------
-!
-!   Evaluate results
-!
+                  !
+                  !   End of optimization block
+                  ! ----------------------------------------------------------------------
+                  !
+                  !   Evaluate results
+                  !
                   dfx = f(1) - Fex
                   dfx1 = dfx
                   IF ( Fex/=0.0D0 ) dfx1 = dfx/dabs(Fex)
@@ -355,81 +357,85 @@ PROGRAM spag_program_1
 !
 !   End of test program
 !
+
+   contains 
+
+   SUBROUTINE nlfunc(M,Me,N,F,G,X)
+      !
+      !********************************************************************
+      !
+      !   Evaluation of test problem functions
+      !
+      !*********************************************************************
+      !
+         IMPLICIT NONE
+         INTEGER NMAX , MMAX
+         PARAMETER (NMAX=101,MMAX=50)
+         COMMON /l1    / Ntp , Nili , Ninl , Neli , Nenl/l2    / Xtp(NMAX)/l3    / Gtp(MMAX)/l4    / Dftp(NMAX)/l5    / Dgtp(NMAX*MMAX)  &
+                       & /l6    / Fxtp/l9    / Index1(MMAX)/l10   / Index2(MMAX)/l11   / Lxl(NMAX)/l12   / Lxu(NMAX)/l13   / Xl(NMAX)    &
+                       & /l14   / Xu(NMAX)
+         LOGICAL Index1 , Index2 , Lxl , Lxu
+         INTEGER M , Me , N , Ntp , Nili , Ninl , Neli , Nenl , i , j
+         REAL*8 Xtp , Gtp , Dftp , Dgtp , Fxtp , Xl , Xu , F , G(M) , X(N)
+      !
+         DO i = 1 , N
+            Xtp(i) = X(i)
+         ENDDO
+         CALL conv(2)
+         F = Fxtp
+         IF ( M==0 ) RETURN
+         DO j = 1 , M
+            Index1(j) = .TRUE.
+         ENDDO
+         CALL conv(4)
+         IF ( Me/=0 ) THEN
+            DO j = 1 , Me
+               G(j) = Gtp(j+M-Me)
+            ENDDO
+         ENDIF
+         IF ( Me==M ) RETURN
+         DO j = Me + 1 , M
+            G(j) = Gtp(j-Me)
+         ENDDO
+      !
+      !   End of function evaluation
+      !
+      END SUBROUTINE nlfunc
+      SUBROUTINE nlgrad(M,Me,Mmax,N,F,G,Df,Dg,X,Geps)
+      !
+      !*********************************************************************
+      !
+      !   Gradient evaluation by differnce formulae
+      !
+      !*********************************************************************
+      !
+         IMPLICIT NONE
+         REAL*8 F , G(Mmax) , X(N) , Df(N) , Dg(Mmax,N) , Geps(Mmax)
+         INTEGER M , Me , Mmax , N , i , j
+         REAL*8 epsi , epsa , feps , xold , ufl
+         COMMON /testr / Epsgrd
+         REAL*8 Epsgrd
+      !
+         ufl = dsqrt(dsqrt(Epsgrd))
+      !
+      !   One-sided differences
+      !
+         DO i = 1 , N
+            xold = X(i)
+            epsa = Epsgrd*dmax1(ufl,dabs(X(i)))
+            epsi = 1.0D0/epsa
+            X(i) = X(i) + epsa
+            CALL nlfunc(M,Me,N,feps,Geps,X)
+            Df(i) = epsi*(feps-F)
+            DO j = 1 , M
+               Dg(j,i) = epsi*(Geps(j)-G(j))
+            ENDDO
+            X(i) = xold
+         ENDDO
+      !
+      !   End of gradient evaluation
+      !
+      END SUBROUTINE nlgrad
+      !      
+
 END PROGRAM spag_program_1
-SUBROUTINE nlfunc(M,Me,N,F,G,X)
-!
-!********************************************************************
-!
-!   Evaluation of test problem functions
-!
-!*********************************************************************
-!
-   IMPLICIT NONE
-   INTEGER NMAX , MMAX
-   PARAMETER (NMAX=101,MMAX=50)
-   COMMON /l1    / Ntp , Nili , Ninl , Neli , Nenl/l2    / Xtp(NMAX)/l3    / Gtp(MMAX)/l4    / Dftp(NMAX)/l5    / Dgtp(NMAX*MMAX)  &
-                 & /l6    / Fxtp/l9    / Index1(MMAX)/l10   / Index2(MMAX)/l11   / Lxl(NMAX)/l12   / Lxu(NMAX)/l13   / Xl(NMAX)    &
-                 & /l14   / Xu(NMAX)
-   LOGICAL Index1 , Index2 , Lxl , Lxu
-   INTEGER M , Me , N , Ntp , Nili , Ninl , Neli , Nenl , i , j
-   REAL*8 Xtp , Gtp , Dftp , Dgtp , Fxtp , Xl , Xu , F , G(M) , X(N)
-!
-   DO i = 1 , N
-      Xtp(i) = X(i)
-   ENDDO
-   CALL conv(2)
-   F = Fxtp
-   IF ( M==0 ) RETURN
-   DO j = 1 , M
-      Index1(j) = .TRUE.
-   ENDDO
-   CALL conv(4)
-   IF ( Me/=0 ) THEN
-      DO j = 1 , Me
-         G(j) = Gtp(j+M-Me)
-      ENDDO
-   ENDIF
-   IF ( Me==M ) RETURN
-   DO j = Me + 1 , M
-      G(j) = Gtp(j-Me)
-   ENDDO
-!
-!   End of function evaluation
-!
-END SUBROUTINE nlfunc
-SUBROUTINE nlgrad(M,Me,Mmax,N,F,G,Df,Dg,X,Geps)
-!
-!*********************************************************************
-!
-!   Gradient evaluation by differnce formulae
-!
-!*********************************************************************
-!
-   IMPLICIT NONE
-   REAL*8 F , G(Mmax) , X(N) , Df(N) , Dg(Mmax,N) , Geps(Mmax)
-   INTEGER M , Me , Mmax , N , i , j
-   REAL*8 epsi , epsa , feps , xold , ufl
-   COMMON /testr / Epsgrd
-   REAL*8 Epsgrd
-!
-   ufl = dsqrt(dsqrt(Epsgrd))
-!
-!   One-sided differences
-!
-   DO i = 1 , N
-      xold = X(i)
-      epsa = Epsgrd*dmax1(ufl,dabs(X(i)))
-      epsi = 1.0D0/epsa
-      X(i) = X(i) + epsa
-      CALL nlfunc(M,Me,N,feps,Geps,X)
-      Df(i) = epsi*(feps-F)
-      DO j = 1 , M
-         Dg(j,i) = epsi*(Geps(j)-G(j))
-      ENDDO
-      X(i) = xold
-   ENDDO
-!
-!   End of gradient evaluation
-!
-END SUBROUTINE nlgrad
-!
