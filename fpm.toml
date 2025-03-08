@@ -1,0 +1,26 @@
+name = "schittkowski-test-problems"
+author = "Jacob Williams"
+description = "Mirror of Schittkowski's Test Problems for Nonlinear Programming"
+homepage = "https://github.com/jacobwilliams/schittkowski-test-problems"
+
+[build]
+auto-executables = true
+auto-examples = true
+auto-tests = true
+
+[library]
+source-dir = "src"
+
+[install]
+library = true
+
+[dev-dependencies]
+slsqp = { git = "https://github.com/jacobwilliams/slsqp" }
+
+[fortran]
+implicit-typing = false
+implicit-external = true
+source-form = "free"
+
+
+
